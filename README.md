@@ -1,18 +1,46 @@
-# AsxCompanyInfo
+# ASX Company Information
 
-To start your Phoenix server:
+A Phoenix LiveView application for fetching and displaying ASX company information and market data.
 
-* Run `mix setup` to install and setup dependencies
-* Start Phoenix endpoint with `mix phx.server` or inside IEx with `iex -S mix phx.server`
+## Features & Architecture
 
-Now you can visit [`localhost:4000`](http://localhost:4000) from your browser.
+- **Parallel data fetching**: Company info and quote data fetched concurrently using `assign_async` for better performance
+- **Modern UI**: Responsive design with DaisyUI skeleton loading states
+- **Zoi validation**: Lightweight input validation without Ecto Changeset overhead
+- **Decimal types**: Use Decimal for financial precision (optional)
+- **Result helpers**: Better handling of result types
+- **Error handling**: Immediate feedback with user-friendly flash messages (retries disabled)
+- **Extendable design**: Focus on success logic with clean separation
 
-Ready to run in production? Please [check our deployment guides](https://hexdocs.pm/phoenix/deployment.html).
+## Quick Start
 
-## Learn more
+1. Install dependencies:
+   ```bash
+   mix setup
+   ```
 
-* Official website: https://www.phoenixframework.org/
-* Guides: https://hexdocs.pm/phoenix/overview.html
-* Docs: https://hexdocs.pm/phoenix
-* Forum: https://elixirforum.com/c/phoenix-forum
-* Source: https://github.com/phoenixframework/phoenix
+2. Configure API credentials in `.env`:
+   ```bash
+   API_BASE_URL=your_api_url
+   API_KEY=your_api_key
+   ```
+
+3. Start the server:
+   ```bash
+   mix phx.server
+   ```
+
+4. Visit `http://localhost:4000`
+
+## Future Considerations
+
+- **Real-time updates**: Timer-based refresh or webhook/push notifications for stock changes
+- **GraphQL API**: Potential for single API call returning both company and quote data
+- **Supervisor pattern**: Could add supervision for more complex task management
+
+## Technical Notes
+
+- Uses `assign_async` for higher-level task management over raw Task usage
+- Parallel fetching improves performance over `Task.await_many`
+- Supervisor pattern not needed at current scale
+- API designed for extendability with focus on success logic

@@ -39,10 +39,7 @@ defmodule AsxCompanyInfoWeb.CompanyLiveTest do
     |> form("form", ticker: "CBA")
     |> render_submit()
 
-    # Wait for async data fetch
-    :timer.sleep(3000)
-
-    html = render(view)
+    html = render_async(view, 3000)
     assert html =~ "Key Statistics"
     assert html =~ "Company Information"
     assert html =~ "Current Price"
@@ -56,10 +53,7 @@ defmodule AsxCompanyInfoWeb.CompanyLiveTest do
     |> element("button", "CBA")
     |> render_click()
 
-    # Wait for async data fetch
-    :timer.sleep(2000)
-
-    html = render(view)
+    html = render_async(view, 3000)
     assert html =~ "Key Statistics"
   end
 
@@ -71,10 +65,7 @@ defmodule AsxCompanyInfoWeb.CompanyLiveTest do
     |> form("form", ticker: "INVALID123")
     |> render_submit()
 
-    # Wait for async data fetch
-    :timer.sleep(2000)
-
-    html = render(view)
+    html = render_async(view, 3000)
     assert html =~ "not found" or html =~ "Failed to fetch"
   end
 end

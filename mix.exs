@@ -61,7 +61,8 @@ defmodule AsxCompanyInfo.MixProject do
       {:bandit, "~> 1.5"},
       {:req, "~> 0.4"},
       {:typed_struct, "~> 0.3.0"},
-      {:number, "~> 1.0"}
+      {:number, "~> 1.0"},
+      {:zoi, "~> 0.17.0"}
     ]
   end
 

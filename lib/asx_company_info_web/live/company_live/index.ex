@@ -2,99 +2,85 @@ defmodule AsxCompanyInfoWeb.CompanyLive.Index do
   use AsxCompanyInfoWeb, :live_view
 
   alias AsxCompanyInfo.MarketData
+  alias Phoenix.LiveView.AsyncResult
+  alias Helpers.ResultHelpers
   import AsxCompanyInfoWeb.StockComponents
 
   @impl true
   def mount(_params, _session, socket) do
     {:ok,
      socket
-     |> assign(:loading, false)
-     |> assign(:error, nil)
-     |> assign(:company_data, nil)
-     |> assign(:quote_data, nil)
+     |> assign(:company_data, AsyncResult.ok(nil))
+     |> assign(:quote_data, AsyncResult.ok(nil))
      |> assign(:current_ticker, "")
      |> assign(:form, to_form(%{"ticker" => ""}))}
   end
 
   @impl true
-  def handle_event("search", %{"ticker" => ticker}, socket) do
-    normalized_ticker =
-      ticker
-      |> String.trim()
-      |> String.upcase()
-
-    case validate_ticker(normalized_ticker) do
-      :ok ->
-        send(self(), {:fetch_data, normalized_ticker})
-
+  def handle_event(event, params, socket)
+      when event in ["search", "select_popular"] do
+    case validate_ticker(params) do
+      {:ok, %{"ticker" => validated_ticker}} ->
         {:noreply,
          socket
-         |> assign(:loading, true)
-         |> assign(:error, nil)
-         |> assign(:current_ticker, normalized_ticker)
-         |> assign(:form, to_form(%{"ticker" => normalized_ticker}))}
+         |> clear_flash()
+         |> assign_data(validated_ticker)}
 
       {:error, error_message} ->
-        {:noreply, assign(socket, :error, error_message)}
+        {:noreply, put_flash(socket, :error, error_message)}
     end
   end
 
-  @impl true
-  def handle_event("select_popular", %{"ticker" => ticker}, socket) do
-    send(self(), {:fetch_data, ticker})
-
-    {:noreply,
-     socket
-     |> assign(:loading, true)
-     |> assign(:error, nil)
-     |> assign(:current_ticker, ticker)
-     |> assign(:form, to_form(%{"ticker" => ticker}))}
+  defp assign_data(socket, ticker) do
+    socket
+    |> assign(:current_ticker, ticker)
+    |> assign(:form, to_form(%{"ticker" => ticker}))
+    |> fetch_company_data(ticker)
+    |> fetch_quote_data(ticker)
   end
 
-  @impl true
-  def handle_info({:fetch_data, ticker}, socket) do
-    # Fetch both company info and quote data in parallel
-    tasks = [
-      Task.async(fn -> MarketData.fetch_company_info(ticker) end),
-      Task.async(fn -> MarketData.fetch_quote(ticker) end)
-    ]
+  defp fetch_company_data(socket, ticker) do
+    socket
+    |> assign(:company_data, AsyncResult.loading())
+    |> assign_async(:company_data, fn ->
+      ticker
+      |> MarketData.fetch_company_info()
+      |> ResultHelpers.bind(fn c -> {:ok, %{company_data: c}} end)
+      |> ResultHelpers.map_error(fn reason -> format_error(reason, ticker) end)
+    end)
+  end
 
-    results = Task.await_many(tasks, :timer.seconds(10))
-
-    case results do
-      [{:ok, company_data}, {:ok, quote_data}] ->
-        {:noreply,
-         socket
-         |> assign(:loading, false)
-         |> assign(:company_data, company_data)
-         |> assign(:quote_data, quote_data)
-         |> assign(:error, nil)}
-
-      [{:error, reason}, _] ->
-        {:noreply,
-         socket
-         |> assign(:loading, false)
-         |> assign(:error, format_error(reason, ticker))}
-
-      [_, {:error, reason}] ->
-        {:noreply,
-         socket
-         |> assign(:loading, false)
-         |> assign(:error, format_error(reason, ticker))}
-    end
+  defp fetch_quote_data(socket, ticker) do
+    socket
+    |> assign(:quote_data, AsyncResult.loading())
+    |> assign_async(:quote_data, fn ->
+      ticker
+      |> MarketData.fetch_quote()
+      |> ResultHelpers.bind(fn q -> {:ok, %{quote_data: q}} end)
+      |> ResultHelpers.map_error(fn reason -> format_error(reason, ticker) end)
+    end)
   end
 
   defp validate_ticker(ticker) do
-    cond do
-      String.length(ticker) < 3 ->
-        {:error, "Ticker must be at least 3 characters"}
+    Zoi.map(%{
+      "ticker" =>
+        Zoi.string(description: "ASC ticker")
+        |> Zoi.trim()
+        |> Zoi.to_upcase()
+        |> Zoi.min(3)
+        |> Zoi.regex(~r/^[A-Z0-9]+$/)
+    })
+    |> Zoi.parse(ticker)
+    |> Helpers.ResultHelpers.map_error(fn
+      [%Zoi.Error{code: :greater_than_or_equal_to} | _] ->
+        "Ticker must be at least 3 characters"
 
-      !Regex.match?(~r/^[A-Z0-9]+$/, ticker) ->
-        {:error, "Ticker must contain only letters and numbers"}
+      [%Zoi.Error{code: :invalid_format} | _] ->
+        "Ticker must contain only letters and numbers"
 
-      true ->
-        :ok
-    end
+      _ ->
+        "Invalid Ticker Input"
+    end)
   end
 
   defp format_error(:not_found, ticker) do

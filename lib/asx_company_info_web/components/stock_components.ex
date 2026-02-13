@@ -1,6 +1,6 @@
 defmodule AsxCompanyInfoWeb.StockComponents do
   @moduledoc """
-  UI components for the Company LiveView.
+  UI components for the CompanyInfo LiveView.
   """
   use Phoenix.Component
 
@@ -44,14 +44,14 @@ defmodule AsxCompanyInfoWeb.StockComponents do
                 type="text"
                 name="ticker"
                 value={@current_ticker}
-                placeholder="e.g., CBA"
-                class="w-full pl-16 pr-4 py-2 border border-[#e9ecef] rounded-md focus:outline-none focus:ring-2 focus:ring-[#20705c] focus:border-transparent uppercase"
+                placeholder="e.g. CBA"
+                class="w-full pl-16 pr-4 py-2 border border-[#e9ecef] rounded-md bg-white text-[#212529] placeholder:text-[#6c757d] focus:outline-none focus:ring-2 focus:ring-[#20705c] focus:border-transparent uppercase"
                 phx-debounce="300"
               />
             </div>
             <button
               type="submit"
-              class="px-6 py-2 bg-[#20705c] text-white rounded-md hover:bg-[#1a5c4d] focus:outline-none focus:ring-2 focus:ring-[#20705c] focus:ring-offset-2 transition-colors"
+              class="px-6 py-2 bg-[#20705c] text-white rounded-md hover:bg-[#1a5c4d] focus:outline-none focus:ring-2 focus:ring-[#20705c] focus:ring-offset-2 transition-colors cursor-pointer"
             >
               Search
             </button>
@@ -66,7 +66,7 @@ defmodule AsxCompanyInfoWeb.StockComponents do
                 type="button"
                 phx-click="select_popular"
                 phx-value-ticker={ticker}
-                class="px-4 py-1.5 border border-[#e9ecef] rounded-md text-sm font-medium text-[#212529] hover:bg-[#f8f9fa] transition-colors"
+                class="px-4 py-1.5 border border-[#e9ecef] rounded-md text-sm font-medium text-[#212529] hover:bg-[#f8f9fa] transition-colors cursor-pointer"
               >
                 {ticker}
               </button>
@@ -159,10 +159,13 @@ defmodule AsxCompanyInfoWeb.StockComponents do
   defp format_change(_, nil), do: "N/A"
 
   defp format_change(%Decimal{} = change, %Decimal{} = pct) do
-    sign = if Decimal.positive?(change), do: "+", else: ""
+    change_sign = if Decimal.positive?(change), do: "+", else: "-"
     abs_change = Decimal.abs(change)
 
-    "#{sign}$#{Decimal.round(abs_change, 2) |> Decimal.to_string()} (#{sign}#{Decimal.round(pct, 2) |> Decimal.to_string()}%)"
+    pct_sign = if Decimal.positive?(pct), do: "+", else: "-"
+    abs_pct = Decimal.abs(pct)
+
+    "#{change_sign}$#{Decimal.round(abs_change, 2) |> Decimal.to_string()} (#{pct_sign}#{Decimal.round(abs_pct, 2) |> Decimal.to_string()}%)"
   end
 
   defp value_color(value) do
