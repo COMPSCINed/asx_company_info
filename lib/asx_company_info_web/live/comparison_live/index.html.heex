@@ -1,0 +1,165 @@
+<Layouts.app flash={@flash}>
+  <div class="min-h-screen bg-[#f8f9fa]">
+    <.asx_header>
+      <div>
+        <h1 class="text-3xl font-bold text-[#212529] mb-2">ASX Stock Comparison</h1>
+        <p class="text-[#6c757d]">Compare up to 4 ASX stocks side-by-side</p>
+      </div>
+
+      <:action>
+        <.link
+          navigate={~p"/"}
+          class="px-4 py-2 border border-[#e9ecef] rounded-md text-[#212529] hover:bg-[#f8f9fa] transition-colors"
+        >
+          Single Stock View
+        </.link>
+      </:action>
+    </.asx_header>
+
+    <main class="max-w-screen-xl mx-auto px-4 py-8">
+      <!-- Search Form Section -->
+      <div class="mb-8">
+        <.search_form form={@form} current_ticker="" centered={false} submit_event="add_ticker" />
+      </div>
+      
+<!-- Current Fetch Status -->
+      <.async_result :let={_result} assign={@quote_data}>
+        <:loading>
+          <div class="mb-4">
+            <div class="bg-white rounded-lg border border-[#e9ecef] p-4 shadow-sm">
+              <div class="flex items-center gap-3">
+                <div class="animate-spin size-5 border-2 border-[#20705c] border-t-transparent rounded-full">
+                </div>
+                <span class="text-[#212529]">Fetching stock data...</span>
+              </div>
+            </div>
+          </div>
+        </:loading>
+      </.async_result>
+      
+<!-- Comparison Dashboard -->
+      <div class="mb-8">
+        <div class="flex justify-between items-center mb-4">
+          <h2 class="text-2xl font-bold text-[#212529]">
+            Comparison Dashboard
+            <span
+              :if={MapSet.size(@quotes_data) > 0}
+              class="text-lg font-normal text-[#6c757d] ml-2"
+            >
+              ({MapSet.size(@quotes_data)} of {@max_stocks} stocks)
+            </span>
+          </h2>
+
+          <button
+            :if={MapSet.size(@quotes_data) > 0}
+            phx-click="clear_all"
+            class="px-4 py-2 text-sm border border-[#e9ecef] rounded-md text-[#6c757d] hover:bg-[#f8f9fa] hover:text-[#dc3545] transition-colors cursor-pointer"
+          >
+            Clear All
+          </button>
+        </div>
+
+        <div
+          :if={MapSet.size(@quotes_data) == 0}
+          class="bg-white rounded-lg border-2 border-dashed border-[#e9ecef] p-12 text-center"
+        >
+          <div class="max-w-md mx-auto">
+            <div class="text-5xl text-[#e9ecef] mb-4">📊</div>
+            <h3 class="text-xl font-semibold text-[#212529] mb-2">
+              No stocks added yet
+            </h3>
+            <p class="text-[#6c757d] mb-6">
+              Search for ASX stocks above to add them to your comparison. You can compare up to 4 stocks side-by-side.
+            </p>
+            <div class="text-sm text-[#6c757d]">
+              <p class="mb-1">Try popular stocks:</p>
+              <div class="flex justify-center gap-2">
+                <button
+                  :for={ticker <- ["CBA", "NAB", "BHP", "ANZ"]}
+                  type="button"
+                  phx-click="select_popular"
+                  phx-value-ticker={ticker}
+                  class="px-3 py-1 border border-[#e9ecef] rounded-md text-sm font-medium text-[#212529] hover:bg-[#f8f9fa] transition-colors cursor-pointer"
+                >
+                  {ticker}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div
+          :if={MapSet.size(@quotes_data) != 0}
+          id="comparison-grid"
+          class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6"
+        >
+          <div
+            :for={quote <- @quotes_data}
+            id={"stock-card-#{quote.symbol}"}
+            class="bg-white rounded-lg border border-[#e9ecef] p-6 shadow-sm relative"
+          >
+            <!-- Remove Button -->
+            <button
+              phx-click="remove_ticker"
+              phx-value-ticker={quote.listing_key}
+              class="absolute top-3 right-3 w-8 h-8 flex items-center justify-center text-[#6c757d] hover:text-[#dc3545] hover:bg-[#f8f9fa] rounded-full transition-colors cursor-pointer"
+              title="Remove from comparison"
+            >
+              &times;
+            </button>
+            
+<!-- Success State -->
+            <div class="space-y-4">
+              <div class="flex items-center gap-3 mb-4">
+                <div class="bg-[#f8f9fa] rounded-lg px-3 py-1.5">
+                  <span class="font-bold text-lg text-[#212529]">{quote.symbol}</span>
+                </div>
+              </div>
+              <div class="space-y-3">
+                <.stat_row
+                  label="Current Price"
+                  value={format_currency(quote.cf_last)}
+                />
+
+                <.stat_row
+                  label="Change"
+                  value={format_change(quote.cf_netchng, quote.pctchng)}
+                  colored={true}
+                />
+
+                <.stat_row
+                  label="Volume"
+                  value={format_number(quote.cf_volume)}
+                />
+
+                <.stat_row
+                  label="Market Value"
+                  value={format_market_value(quote.mkt_value)}
+                />
+
+                <.stat_row
+                  label="52W High"
+                  value={format_currency(Map.get(quote, :"52wk_high"))}
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+<!-- Comparison Insights -->
+      <%= if @comparison_metrics do %>
+        <div class="mt-8">
+          <.comparison_summary
+            best_performer={@comparison_metrics.best_performer}
+            worst_performer={@comparison_metrics.worst_performer}
+            highest_price={@comparison_metrics.highest_price}
+            lowest_price={@comparison_metrics.lowest_price}
+            total_market_value={@comparison_metrics.total_market_value}
+            average_change={@comparison_metrics.average_change}
+            stock_count={@comparison_metrics.stock_count}
+          />
+        </div>
+      <% end %>
+    </main>
+  </div>
+</Layouts.app>

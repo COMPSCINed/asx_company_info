@@ -18,6 +18,7 @@ defmodule AsxCompanyInfoWeb.Router do
     pipe_through :browser
 
     live "/", CompanyLive.Index, :index
+    live "/compare", ComparisonLive.Index, :index
   end
 
   # Other scopes may use custom stacks.

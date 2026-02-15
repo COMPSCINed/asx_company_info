@@ -1,7 +1,7 @@
 <Layouts.app flash={@flash}>
   <div class="min-h-screen bg-[#f8f9fa]">
-    <header class="bg-white border-b border-[#e9ecef] py-8">
-      <div class="max-w-screen-xl mx-auto px-4 text-center">
+    <.asx_header>
+      <div>
         <h1 class="text-3xl font-bold text-[#212529] mb-2">
           ASX Company Information
         </h1>
@@ -9,7 +9,15 @@
           Search for Australian Stock Exchange listed companies
         </p>
       </div>
-    </header>
+      <:action>
+        <.link
+          navigate={~p"/compare"}
+          class="px-4 py-2 border border-[#e9ecef] rounded-md text-[#212529] hover:bg-[#f8f9fa] transition-colors"
+        >
+          Compare Stocks
+        </.link>
+      </:action>
+    </.asx_header>
 
     <main class="max-w-screen-xl mx-auto px-4 py-8">
       <%= if @current_ticker != "" do %>

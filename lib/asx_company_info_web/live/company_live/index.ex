@@ -61,7 +61,7 @@ defmodule AsxCompanyInfoWeb.CompanyLive.Index do
     end)
   end
 
-  defp validate_ticker(ticker) do
+  def validate_ticker(ticker) do
     Zoi.map(%{
       "ticker" =>
         Zoi.string(description: "ASC ticker")
@@ -83,15 +83,15 @@ defmodule AsxCompanyInfoWeb.CompanyLive.Index do
     end)
   end
 
-  defp format_error(:not_found, ticker) do
+  def format_error(:not_found, ticker) do
     "Ticker '#{ticker}' not found or may be delisted"
   end
 
-  defp format_error(:bad_request, _ticker) do
+  def format_error(:bad_request, _ticker) do
     "Invalid request. Please check the ticker symbol"
   end
 
-  defp format_error(_reason, _ticker) do
+  def format_error(_reason, _ticker) do
     "Failed to fetch company information. Please try again later"
   end
 end

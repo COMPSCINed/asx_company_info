@@ -297,7 +297,7 @@ defmodule AsxCompanyInfoWeb.CoreComponents do
           {render_slot(@subtitle)}
         </p>
       </div>
-      <div class="flex-none">{render_slot(@actions)}</div>
+      {render_slot(@actions)}
     </header>
     """
   end

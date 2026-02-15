@@ -29,8 +29,11 @@ defmodule AsxCompanyInfo.MarketData do
     |> get([market_key: "asx", listing_key: ticker], fn body ->
       quote_data = body["quote"] || %{}
 
+      dbg(body)
+
       %Quote{
         symbol: body["symbol"],
+        listing_key: body["listing_key"],
         cf_last: to_decimal(quote_data["cf_last"]),
         cf_netchng: to_decimal(quote_data["cf_netchng"]),
         pctchng: to_decimal(quote_data["pctchng"]),

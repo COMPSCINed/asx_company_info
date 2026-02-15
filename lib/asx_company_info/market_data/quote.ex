@@ -6,6 +6,7 @@ defmodule AsxCompanyInfo.MarketData.Quote do
 
   typedstruct do
     field :symbol, String.t()
+    field :listing_key, String.t()
     field :cf_last, Decimal.t()
     field :cf_netchng, Decimal.t()
     field :pctchng, Decimal.t()
