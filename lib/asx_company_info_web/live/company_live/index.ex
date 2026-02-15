@@ -1,5 +1,5 @@
 defmodule AsxCompanyInfoWeb.CompanyLive.Index do
-  use AsxCompanyInfoWeb, :live_view
+  use AsxCompanyInfoWeb.TickerHandling
 
   alias AsxCompanyInfo.MarketData
   alias Phoenix.LiveView.AsyncResult
@@ -17,18 +17,11 @@ defmodule AsxCompanyInfoWeb.CompanyLive.Index do
   end
 
   @impl true
-  def handle_event(event, params, socket)
-      when event in ["search", "select_popular"] do
-    case validate_ticker(params) do
-      {:ok, %{"ticker" => validated_ticker}} ->
-        {:noreply,
-         socket
-         |> clear_flash()
-         |> assign_data(validated_ticker)}
-
-      {:error, error_message} ->
-        {:noreply, put_flash(socket, :error, error_message)}
-    end
+  def handle_validated_ticker(socket, validated_ticker) do
+    {:noreply,
+     socket
+     |> clear_flash()
+     |> assign_data(validated_ticker)}
   end
 
   defp assign_data(socket, ticker) do
@@ -59,39 +52,5 @@ defmodule AsxCompanyInfoWeb.CompanyLive.Index do
       |> ResultHelpers.bind(fn q -> {:ok, %{quote_data: q}} end)
       |> ResultHelpers.map_error(fn reason -> format_error(reason, ticker) end)
     end)
-  end
-
-  def validate_ticker(ticker) do
-    Zoi.map(%{
-      "ticker" =>
-        Zoi.string(description: "ASC ticker")
-        |> Zoi.trim()
-        |> Zoi.to_upcase()
-        |> Zoi.min(3)
-        |> Zoi.regex(~r/^[A-Z0-9]+$/)
-    })
-    |> Zoi.parse(ticker)
-    |> Helpers.ResultHelpers.map_error(fn
-      [%Zoi.Error{code: :greater_than_or_equal_to} | _] ->
-        "Ticker must be at least 3 characters"
-
-      [%Zoi.Error{code: :invalid_format} | _] ->
-        "Ticker must contain only letters and numbers"
-
-      _ ->
-        "Invalid Ticker Input"
-    end)
-  end
-
-  def format_error(:not_found, ticker) do
-    "Ticker '#{ticker}' not found or may be delisted"
-  end
-
-  def format_error(:bad_request, _ticker) do
-    "Invalid request. Please check the ticker symbol"
-  end
-
-  def format_error(_reason, _ticker) do
-    "Failed to fetch company information. Please try again later"
   end
 end

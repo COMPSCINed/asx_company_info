@@ -29,8 +29,6 @@ defmodule AsxCompanyInfo.MarketData do
     |> get([market_key: "asx", listing_key: ticker], fn body ->
       quote_data = body["quote"] || %{}
 
-      dbg(body)
-
       %Quote{
         symbol: body["symbol"],
         listing_key: body["listing_key"],

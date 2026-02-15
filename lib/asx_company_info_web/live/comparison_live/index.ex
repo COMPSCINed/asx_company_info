@@ -1,10 +1,9 @@
 defmodule AsxCompanyInfoWeb.ComparisonLive.Index do
-  alias AsxCompanyInfo.MarketData.Quote
-  use AsxCompanyInfoWeb, :live_view
+  use AsxCompanyInfoWeb.TickerHandling
 
   alias AsxCompanyInfo.MarketData
   alias Phoenix.LiveView.AsyncResult
-  alias AsxCompanyInfoWeb.CompanyLive
+  alias AsxCompanyInfo.MarketData.Quote
   import AsxCompanyInfoWeb.StockComponents
 
   @impl true
@@ -23,18 +22,6 @@ defmodule AsxCompanyInfoWeb.ComparisonLive.Index do
     {:noreply, calculate_comparison_metrics(socket)}
   end
 
-  @impl true
-  def handle_event("add_ticker", params, socket) do
-    case validate_ticker(params) do
-      {:ok, %{"ticker" => validated_ticker}} ->
-        updated_socket = maybe_fetch_quote_data(socket, validated_ticker)
-        {:noreply, updated_socket}
-
-      {:error, error_message} ->
-        {:noreply, put_flash(socket, :error, error_message)}
-    end
-  end
-
   def handle_event("remove_ticker", %{"ticker" => ticker}, socket) do
     {:noreply,
      socket
@@ -51,8 +38,10 @@ defmodule AsxCompanyInfoWeb.ComparisonLive.Index do
      |> calculate_comparison_metrics()}
   end
 
-  def handle_event("select_popular", %{"ticker" => ticker}, socket) do
-    handle_event("add_ticker", %{"ticker" => ticker}, socket)
+  @impl true
+  def handle_validated_ticker(socket, validated_ticker) do
+    updated_socket = maybe_fetch_quote_data(socket, validated_ticker)
+    {:noreply, updated_socket}
   end
 
   @impl true
@@ -143,7 +132,4 @@ defmodule AsxCompanyInfoWeb.ComparisonLive.Index do
     |> Enum.reduce(Decimal.new(0), &Decimal.add(&2, &1.pctchng))
     |> Decimal.div(count)
   end
-
-  defdelegate validate_ticker(ticker), to: CompanyLive.Index
-  defdelegate format_error(error, ticker), to: CompanyLive.Index
 end

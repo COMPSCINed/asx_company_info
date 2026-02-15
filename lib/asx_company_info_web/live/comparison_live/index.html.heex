@@ -145,21 +145,18 @@
           </div>
         </div>
       </div>
-      
-<!-- Comparison Insights -->
-      <%= if @comparison_metrics do %>
-        <div class="mt-8">
-          <.comparison_summary
-            best_performer={@comparison_metrics.best_performer}
-            worst_performer={@comparison_metrics.worst_performer}
-            highest_price={@comparison_metrics.highest_price}
-            lowest_price={@comparison_metrics.lowest_price}
-            total_market_value={@comparison_metrics.total_market_value}
-            average_change={@comparison_metrics.average_change}
-            stock_count={@comparison_metrics.stock_count}
-          />
-        </div>
-      <% end %>
+
+      <div :if={@comparison_metrics} class="mt-8">
+        <.comparison_summary
+          best_performer={@comparison_metrics.best_performer}
+          worst_performer={@comparison_metrics.worst_performer}
+          highest_price={@comparison_metrics.highest_price}
+          lowest_price={@comparison_metrics.lowest_price}
+          total_market_value={@comparison_metrics.total_market_value}
+          average_change={@comparison_metrics.average_change}
+          stock_count={@comparison_metrics.stock_count}
+        />
+      </div>
     </main>
   </div>
 </Layouts.app>
