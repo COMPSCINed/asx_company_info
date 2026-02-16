@@ -44,24 +44,6 @@ defmodule AsxCompanyInfoWeb.ComparisonLive.Index do
     {:noreply, updated_socket}
   end
 
-  @impl true
-  def handle_async(:fetch_quote_data, {:ok, {:ok, fetched_quote_data}}, socket) do
-    {:noreply,
-     socket
-     |> assign(:quote_data, AsyncResult.ok(nil))
-     |> update(:quotes_data, &MapSet.put(&1, fetched_quote_data))
-     |> calculate_comparison_metrics()}
-  end
-
-  def handle_async(:fetch_quote_data, {:ok, {:error, reason}}, socket) do
-    %{quote_data: quote_data, current_ticker: ticker} = socket.assigns
-
-    {:noreply,
-     socket
-     |> assign(:quote_data, AsyncResult.failed(quote_data, reason))
-     |> put_flash(:error, format_error(reason, ticker))}
-  end
-
   defp maybe_fetch_quote_data(socket, validated_ticker) do
     %{quotes_data: quotes_data, max_stocks: max_stocks} = socket.assigns
 
@@ -84,6 +66,24 @@ defmodule AsxCompanyInfoWeb.ComparisonLive.Index do
     socket
     |> assign(:quote_data, AsyncResult.loading())
     |> start_async(:fetch_quote_data, fn -> MarketData.fetch_quote(ticker) end)
+  end
+
+  @impl true
+  def handle_async(:fetch_quote_data, {:ok, {:ok, fetched_quote_data}}, socket) do
+    {:noreply,
+     socket
+     |> assign(:quote_data, AsyncResult.ok(nil))
+     |> update(:quotes_data, &MapSet.put(&1, fetched_quote_data))
+     |> calculate_comparison_metrics()}
+  end
+
+  def handle_async(:fetch_quote_data, {:ok, {:error, reason}}, socket) do
+    %{quote_data: quote_data, current_ticker: ticker} = socket.assigns
+
+    {:noreply,
+     socket
+     |> assign(:quote_data, AsyncResult.failed(quote_data, reason))
+     |> put_flash(:error, format_error(reason, ticker))}
   end
 
   defp calculate_comparison_metrics(socket) do

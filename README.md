@@ -33,7 +33,6 @@ A Phoenix LiveView application for fetching and displaying ASX company informati
 ### Stock Comparison Features
 - **Side-by-side comparison**: View up to 4 stocks simultaneously in a responsive grid layout
 - **Smart comparison insights**: Automatic calculation of best/worst performers, highest/lowest prices, total market value, and average change
-- **Real-time updates**: Individual stock cards with current prices, percentage changes, and key metrics
 - **Interactive controls**: Add/remove stocks, clear all, and popular stock quick-select
 - **Maximum limit enforcement**: Prevents UI clutter by limiting to 4 stocks per comparison
 
@@ -71,7 +70,7 @@ Based on the usiness-case-stock-comparison.md, this implementation directly addr
 ## Implementation Decisions & Trade-offs
 
 ### Architecture Choice: MapSet with AsyncResult
-- **Why MapSet?**: Provides O(log n) operations for add/remove with automatic deduplication, but could be overkilled as we only compare 4 of them.
+- **Why MapSet?**: Provides O(log n) operations for add/remove with automatic deduplication, but could be overkill as we only compare 4 of them.
 - **Why AsyncResult?**: Tracks individual fetch operations with proper loading/error states without the need to do extra states management
 
 ### Data Structure: Quote-Only Comparison
