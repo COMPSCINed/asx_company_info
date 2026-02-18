@@ -48,11 +48,11 @@ A Phoenix LiveView application for fetching and displaying ASX company informati
 - **State Management**: `MapSet` for quote data storage with `AsyncResult` for fetch operations
 - **Data Flow**: Automatic metric recalculation on every change
 - **Decimal Comparison**: Custom comparison logic using `Decimal.compare/2` for accurate financial calculations
-- **Clear separation**: Single-view and comparison-view logic kept distinct but share common utilities (`TickHandling`)
+- **Clear separation**: Single-view and comparison-view logic kept distinct but share common utilities (`TickerHandling`)
 
 ## Addressing User Pain Points
 
-Based on the usiness-case-stock-comparison.md, this implementation directly addresses key user pain points:
+Based on the `business-case-stock-comparison.md`, this implementation directly addresses key user pain points:
 
 ### Problem: Inefficient Multi-Tab Workflow
 **Solution**: Dedicated comparison page (`/compare`) allows users to view up to 4 stocks side-by-side without browser tab switching.
@@ -70,18 +70,24 @@ Based on the usiness-case-stock-comparison.md, this implementation directly addr
 ## Implementation Decisions & Trade-offs
 
 ### Architecture Choice: MapSet with AsyncResult
-- **Why MapSet?**: Provides O(log n) operations for add/remove with automatic deduplication, but could be overkill as we only compare 4 of them.
-- **Why AsyncResult?**: Tracks individual fetch operations with proper loading/error states without the need to do extra states management
+- **Why MapSet?**:
+Provides efficient add/remove operations with automatic deduplication. While this may be slightly overkill for a 4-stock limit, the implementation is extensible and supports increasing `max_stocks` with minimal changes. Additionally, MapSet guarantees uniqueness, preventing duplicate stock comparisons.
+- **Why AsyncResult?**: Tracks individual fetch operations with proper loading and error states, eliminating the need for manual state management.
 
-### Data Structure: Quote-Only Comparison
+### Quote-Only Comparison
 - **Decision**: Comparison view shows financial metrics only (no company descriptions)
 - **Rationale**: Reduces cognitive load and focuses on comparative analysis
 - **Benefit**: Faster loading and cleaner UI for comparison tasks
 
-### Maximum 4 Stocks Limit
+### Maximum 4 Stocks Limit (This can be changed by modifying a single configuration value)
 - **Decision**: Enforced limit to prevent UI clutter and API overload
 - **Rationale**: Matches user behavior (3-5 stocks average) and maintains performance
 - **User Benefit**: Clean, readable interface without overwhelming data
+
+### Result Handling / Continuation Pattern
+**Decision**: A consistent pattern is used for handling success and failure cases from previous operations.
+**Rationale**: Keeps business logic clear and avoids deeply nested conditional branches.
+**Benefit**: Improves readability and maintainability.
 
 ## Future Considerations
 
@@ -97,4 +103,4 @@ Based on the usiness-case-stock-comparison.md, this implementation directly addr
 
 ### Notes
 Tests make real API requests, but we could mock them to test accumulated values such as Average Change.
-Some of the implementations (generalizations) may be overkill.
+Some generalizations may be slightly over engineered for the current scope but were implemented to explore extensibility and structural clarity.
